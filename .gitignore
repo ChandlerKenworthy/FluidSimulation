@@ -1,0 +1,11 @@
+# Build files
+build/
+
+# External libraries (copyright issues)
+libs/
+
+# Windows
+.vscode
+
+# MacOS
+.DS_Store
