@@ -1,37 +1,47 @@
 
 #include "Renderer.hpp"
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+#include <gtc/type_ptr.hpp>
 
-Renderer::Renderer(GLFWwindow *window, const int view_width, const int view_height, std::vector<Particle> &particles) : 
+Renderer::Renderer(GLFWwindow *window, const float view_width, const float view_height, std::vector<Particle> &particles) : 
 fWindow(window), fViewWidth(view_width), fViewHeight(view_height), fParticles(&particles) { 
     
 }
 
-GLuint Renderer::CreateShaderProgram(const char* vertexPath, const char* fragmentPath) {
+GLuint Renderer::CreateShaderProgram(const char* vertexPath, const char* geomPath, const char* fragmentPath) {
     std::string vertexCode;
+    std::string geomCode;
     std::string fragmentCode;
     std::ifstream vShaderFile;
+    std::ifstream gShaderFile;
     std::ifstream fragShaderFile;
 
     // Ensure ifstream objects can throw exceptios
     vShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    gShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     fragShaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
 
     // Try to open the files
     try {
         vShaderFile.open(vertexPath);
+        gShaderFile.open(geomPath);
         fragShaderFile.open(fragmentPath);
 
-        std::stringstream vShaderStream, fragShaderStream;
+        std::stringstream vShaderStream, gShaderStream, fragShaderStream;
 
         // Read file buffer contents into streams
         vShaderStream << vShaderFile.rdbuf();
+        gShaderStream << gShaderFile.rdbuf();
         fragShaderStream << fragShaderFile.rdbuf();
 
         vShaderFile.close();
+        gShaderFile.close();
         fragShaderFile.close();
 
         // Convert stream to a string
         vertexCode = vShaderStream.str();
+        geomCode = gShaderStream.str();
         fragmentCode = fragShaderStream.str();
     } catch(std::ifstream::failure e) {
         std::cerr << "ERROR::SHADER::FILE_NOT_SUCESSFULLY_READ" << std::endl;
@@ -39,9 +49,10 @@ GLuint Renderer::CreateShaderProgram(const char* vertexPath, const char* fragmen
     }
 
     const char* vShaderCode = vertexCode.c_str();
+    const char* gShaderCode = geomCode.c_str();
     const char* fShaderCode = fragmentCode.c_str();
 
-    GLuint vertex, fragment;
+    GLuint vertex, geometry, fragment;
     int success;
     char infoLog[512];
 
@@ -53,6 +64,16 @@ GLuint Renderer::CreateShaderProgram(const char* vertexPath, const char* fragmen
     if (!success) {
         glGetShaderInfoLog(vertex, 512, NULL, infoLog);
         std::cerr << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    // Compile geometry shader
+    geometry = glCreateShader(GL_GEOMETRY_SHADER);
+    glShaderSource(geometry, 1, &gShaderCode, NULL);
+    glCompileShader(geometry);
+    glGetShaderiv(geometry, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        glGetShaderInfoLog(geometry, 512, NULL, infoLog);
+        std::cerr << "ERROR::SHADER::GEOMETRY::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
 
     // Compile fragment shader
@@ -68,6 +89,7 @@ GLuint Renderer::CreateShaderProgram(const char* vertexPath, const char* fragmen
     // Link shaders
     GLuint shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertex);
+    glAttachShader(shaderProgram, geometry);
     glAttachShader(shaderProgram, fragment);
     glLinkProgram(shaderProgram);
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
@@ -77,19 +99,20 @@ GLuint Renderer::CreateShaderProgram(const char* vertexPath, const char* fragmen
     }
 
     glDeleteShader(vertex);
+    glDeleteShader(geometry);
     glDeleteShader(fragment);
 
     return shaderProgram;
 }
 
-void Renderer::InitGL(const float particle_smoothing_length) {
+void Renderer::InitGL() {
     glfwMakeContextCurrent(fWindow); // Ensure the correct context is active
     
     glViewport(0, 0, fViewWidth, fViewHeight);
     glClearColor(0.9f, 0.9f, 0.9f, 1); // Light grey background colour
 
     // Compile and link shaders
-    fShaderProgram = CreateShaderProgram("..\\shaders\\vertex.vert", "..\\shaders\\fragment.frag");
+    fShaderProgram = CreateShaderProgram("..\\shaders\\vertex.vert", "..\\shaders\\geometry.geom", "..\\shaders\\fragment.frag");
 
     // Generate the VAO and VBO
     glGenVertexArrays(1, &fVAO);
@@ -110,8 +133,10 @@ void Renderer::InitGL(const float particle_smoothing_length) {
 
     // Set up OpenGL for point smoothing and projection matrix
     glEnable(GL_MULTISAMPLE);
-    glPointSize(10.0f); // Set point size for rendering particles
 
+    glUseProgram(fShaderProgram);
+    fProjLoc = glGetUniformLocation(fShaderProgram, "projection");
+    fRadiusLoc = glGetUniformLocation(fShaderProgram, "radius");
 }
 
 void Renderer::Render() {
@@ -120,22 +145,31 @@ void Renderer::Render() {
     // Use the shader program
     glUseProgram(fShaderProgram);
 
-    /*
-    // Set up the projection matrix (2D orthographic projection)
-    glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(fViewWidth), 0.0f, static_cast<float>(fViewHeight));
-    GLint projLoc = glGetUniformLocation(fShaderProgram, "projection");
-    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+     // Calculate the aspect ratio
+    float aspectRatio = fViewWidth / fViewHeight;
 
-    // Set the point size (optional, you can change this dynamically)
-    GLint pointSizeLoc = glGetUniformLocation(fShaderProgram, "pointSize");
-    glUniform1f(pointSizeLoc, 10.0f); // Set point size to 10.0f
+    // Set up the projection matrix (2D orthographic projection)
+    glm::mat4 projection = glm::ortho(
+        -fViewWidth / 2., 
+        fViewWidth / 2., 
+        -fViewHeight / 2., 
+        fViewHeight / 2.
+    );
+
+    glUniformMatrix4fv(fProjLoc, 1, GL_FALSE, glm::value_ptr(projection));
+    glUniform1f(fRadiusLoc, 0.2f);  // Set the radius for the particles
 
     // Bind VAO and render particles
     glBindVertexArray(fVAO);
     glDrawArrays(GL_POINTS, 0, fParticles->size()); // Draw particles as points
     glBindVertexArray(0);
-    */
     glfwSwapBuffers(fWindow); // Swap buffers for the next frame
+
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        std::cout << "OpenGL Error: " << err << std::endl;
+    }
+
 }
 
 void Renderer::ProcessInputs() {

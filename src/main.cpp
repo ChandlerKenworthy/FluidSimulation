@@ -16,8 +16,8 @@ int main() {
     glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
 
     // Create the window object
-    const int VIEW_WIDTH = 800;
-    const int VIEW_HEIGHT = 600;
+    const float VIEW_WIDTH = 800;
+    const float VIEW_HEIGHT = 600;
     GLFWwindow* window = glfwCreateWindow(VIEW_WIDTH, VIEW_HEIGHT, "OpenGL Window", nullptr, nullptr);
     if (!window) {
         std::cerr << "Failed to create GLFW window\n";
@@ -38,7 +38,7 @@ int main() {
     std::vector<Particle> particles{};
     particles.push_back(Particle(Vector2(0.0f, 0.0f), Vector2(0.0f, 0.0f), 5.0f));
     Renderer r(window, VIEW_WIDTH, VIEW_HEIGHT, particles);
-    r.InitGL(20.0f);
+    r.InitGL();
 
     while (!glfwWindowShouldClose(window)) {
         r.ProcessInputs();

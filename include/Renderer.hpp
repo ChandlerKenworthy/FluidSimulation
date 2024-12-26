@@ -11,21 +11,22 @@
 
 class Renderer {
     public:
-        explicit Renderer(GLFWwindow *window, const int view_width, const int view_height, std::vector<Particle> &particles);
-        void InitGL(const float particle_smoothing_length);
+        explicit Renderer(GLFWwindow *window, const float view_width, const float view_height, std::vector<Particle> &particles);
+        void InitGL();
         void Render();
         void ProcessInputs();
     private:
-        GLuint CreateShaderProgram(const char* vertexPath, const char* fragmentPath);
+        GLuint CreateShaderProgram(const char* vertexPath, const char* geomPath, const char* fragmentPath);
 
         GLFWwindow *fWindow;
-        int fViewWidth;
+        float fViewWidth;
         int fViewHeight;
         std::vector<Particle> *fParticles;
 
         // Buffer objects
         GLuint fVAO, fVBO;
         GLuint fShaderProgram;
+        GLint fProjLoc, fRadiusLoc;
 
 
 };

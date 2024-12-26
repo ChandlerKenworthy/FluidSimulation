@@ -16,6 +16,7 @@ add_subdirectory(libs/glfw-3.4)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/libs/glad/include)
 include_directories(${CMAKE_SOURCE_DIR}/libs/glfw-3.4/include)
+include_directories(${CMAKE_SOURCE_DIR}/libs/glm)
 
 # Set the source files
 file(GLOB_RECURSE SOURCE_FILES src/*.cpp src/*.cu)
