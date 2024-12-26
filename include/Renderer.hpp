@@ -20,13 +20,14 @@ class Renderer {
 
         GLFWwindow *fWindow;
         float fViewWidth;
-        int fViewHeight;
+        float fViewHeight;
+        float fAspectRatio;
         std::vector<Particle> *fParticles;
 
         // Buffer objects
         GLuint fVAO, fVBO;
         GLuint fShaderProgram;
-        GLint fProjLoc, fRadiusLoc;
+        GLint fProjLoc, fRadiusLoc, fAspectLoc;
 
 
 };

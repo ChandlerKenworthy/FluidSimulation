@@ -36,7 +36,7 @@ int main() {
 
     // Create a renderer object to handle drawing everything into the window
     std::vector<Particle> particles{};
-    particles.push_back(Particle(Vector2(0.0f, 0.0f), Vector2(0.0f, 0.0f), 5.0f));
+    particles.push_back(Particle(Vector2(0.0f, 0.0f), Vector2(0.0f, 0.0f), 5.0f)); // approx scale [-1, 1]
     Renderer r(window, VIEW_WIDTH, VIEW_HEIGHT, particles);
     r.InitGL();
 

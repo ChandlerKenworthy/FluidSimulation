@@ -137,6 +137,10 @@ void Renderer::InitGL() {
     glUseProgram(fShaderProgram);
     fProjLoc = glGetUniformLocation(fShaderProgram, "projection");
     fRadiusLoc = glGetUniformLocation(fShaderProgram, "radius");
+    fAspectLoc = glGetUniformLocation(fShaderProgram, "aspectRatio");
+
+    // Calculate the aspect ratio
+    fAspectRatio = fViewWidth / fViewHeight;
 }
 
 void Renderer::Render() {
@@ -144,9 +148,6 @@ void Renderer::Render() {
     
     // Use the shader program
     glUseProgram(fShaderProgram);
-
-     // Calculate the aspect ratio
-    float aspectRatio = fViewWidth / fViewHeight;
 
     // Set up the projection matrix (2D orthographic projection)
     glm::mat4 projection = glm::ortho(
@@ -157,7 +158,8 @@ void Renderer::Render() {
     );
 
     glUniformMatrix4fv(fProjLoc, 1, GL_FALSE, glm::value_ptr(projection));
-    glUniform1f(fRadiusLoc, 0.2f);  // Set the radius for the particles
+    glUniform1f(fRadiusLoc, 0.03f);  // Set the radius for the particles
+    glUniform1f(fAspectLoc, fAspectRatio);
 
     // Bind VAO and render particles
     glBindVertexArray(fVAO);
