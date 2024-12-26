@@ -11,11 +11,12 @@
 
 class Renderer {
     public:
-        explicit Renderer(GLFWwindow *window, const float view_width, const float view_height, std::vector<Particle> &particles);
+        explicit Renderer(GLFWwindow *window, const float view_width, const float view_height, std::vector<Particle> *particles);
         void InitGL();
         void Render();
         void ProcessInputs();
         void UpdateParticleBuffer();
+        void SetParticleRadius(const float radius) { fParticleRadius = radius; }
     private:
         GLuint CreateShaderProgram(const char* vertexPath, const char* geomPath, const char* fragmentPath);
 
@@ -24,6 +25,7 @@ class Renderer {
         float fViewHeight;
         float fAspectRatio;
         std::vector<Particle> *fParticles;
+        float fParticleRadius;
 
         // Buffer objects
         GLuint fVAO, fVBO;

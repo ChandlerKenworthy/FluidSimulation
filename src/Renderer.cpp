@@ -4,10 +4,8 @@
 #include <gtc/matrix_transform.hpp>
 #include <gtc/type_ptr.hpp>
 
-Renderer::Renderer(GLFWwindow *window, const float view_width, const float view_height, std::vector<Particle> &particles) : 
-fWindow(window), fViewWidth(view_width), fViewHeight(view_height), fParticles(&particles) { 
-    
-}
+Renderer::Renderer(GLFWwindow *window, const float view_width, const float view_height, std::vector<Particle> *particles) : 
+fWindow(window), fViewWidth(view_width), fViewHeight(view_height), fParticles(particles) { }
 
 GLuint Renderer::CreateShaderProgram(const char* vertexPath, const char* geomPath, const char* fragmentPath) {
     std::string vertexCode;
@@ -119,12 +117,15 @@ void Renderer::InitGL() {
     glGenBuffers(1, &fVBO);
     glBindVertexArray(fVAO);
 
+    // Calculate the offset to the 'position' member within the Particle structure
+    const size_t offset_p = offsetof(Particle, p); 
+
     // Set up the VBO and bind data
     glBindBuffer(GL_ARRAY_BUFFER, fVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Vector2) * fParticles->size(), fParticles->data(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(Particle) * fParticles->size(), fParticles->data(), GL_STATIC_DRAW);
 
     // Define the vertex position attribute
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vector2), (void*)0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offset_p);
     glEnableVertexAttribArray(0);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind the VBO
@@ -158,7 +159,7 @@ void Renderer::Render() {
     );
 
     glUniformMatrix4fv(fProjLoc, 1, GL_FALSE, glm::value_ptr(projection));
-    glUniform1f(fRadiusLoc, 0.03f);  // Set the radius for the particles
+    glUniform1f(fRadiusLoc, fParticleRadius);  // Set the radius for the particles
     glUniform1f(fAspectLoc, fAspectRatio);
 
     // Bind VAO and render particles

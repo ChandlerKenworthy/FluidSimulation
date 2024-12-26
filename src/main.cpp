@@ -2,6 +2,10 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include "Renderer.hpp"
+#include "Constants.hpp"
+#include "Solver.hpp"
+
+#define NUM_PARTICLES 16
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -34,15 +38,25 @@ int main() {
         return -1;
     }
 
+    // Initalise the particles
+    Solver s(NUM_PARTICLES);
+    s.SetParticleSize(0.02);
+    s.Start(); // Places the particles in an evenly spaced grid
+
     // Create a renderer object to handle drawing everything into the window
-    std::vector<Particle> particles{};
-    particles.push_back(Particle(Vector2(0.0f, 0.0f), Vector2(0.0f, 0.0f), 5.0f)); // approx scale [-1, 1]
-    Renderer r(window, VIEW_WIDTH, VIEW_HEIGHT, particles);
+    Renderer r(window, VIEW_WIDTH, VIEW_HEIGHT, s.GetParticles());
+    r.SetParticleRadius(s.GetParticleSize());
     r.InitGL();
 
+    // Main loop
     while (!glfwWindowShouldClose(window)) {
         r.ProcessInputs();
-        r.Render();
+
+        // TODO: step the particle forwards
+        // s.Update();
+
+        r.UpdateParticleBuffer(); // Update buffers to draw new position
+        r.Render(); // Draw the scene
 
         glfwPollEvents();
     }
