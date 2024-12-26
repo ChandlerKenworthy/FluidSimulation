@@ -15,6 +15,7 @@ class Renderer {
         void InitGL();
         void Render();
         void ProcessInputs();
+        void UpdateParticleBuffer();
     private:
         GLuint CreateShaderProgram(const char* vertexPath, const char* geomPath, const char* fragmentPath);
 

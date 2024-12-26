@@ -179,3 +179,9 @@ void Renderer::ProcessInputs() {
         glfwSetWindowShouldClose(fWindow, GL_TRUE);
     }
 }
+
+void Renderer::UpdateParticleBuffer() {
+    glBindBuffer(GL_ARRAY_BUFFER, fVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vector2) * fParticles->size(), fParticles->data());
+    glBindBuffer(GL_ARRAY_BUFFER, 0); // unbind the buffer
+}
