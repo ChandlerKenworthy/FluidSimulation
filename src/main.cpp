@@ -4,7 +4,7 @@
 #include "Renderer.hpp"
 #include "Solver.hpp"
 
-#define NUM_PARTICLES 3
+#define NUM_PARTICLES 12
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -40,7 +40,7 @@ int main() {
     // Initalise the particles
     Solver s(NUM_PARTICLES);
     s.SetParticleSize(0.02);
-    s.Start(); // Places the particles in an evenly spaced grid
+    s.Start(true); // Places the particles in an evenly spaced grid or random arrangement
 
     // Create a renderer object to handle drawing everything into the window
     Renderer r(window, VIEW_WIDTH, VIEW_HEIGHT, s.GetParticles());

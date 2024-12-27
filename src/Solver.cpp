@@ -1,22 +1,51 @@
+#include <random>
 #include "Solver.hpp"
 #include "Constants.hpp"
 
-Solver::Solver(const int num_particles) : fNParticles(num_particles), fParticles(), fParticleSize(0.04f), fParticleSpacing(0.02f) { }
+Solver::Solver(const int num_particles) : fNParticles(num_particles), fParticles(), fParticleSize(0.04f), fParticleSpacing(0.02f) {
+    fBoundsSize = Vector2(2., 2.); // +/- 1 in each direction
+    fHalfBoundsSize = fBoundsSize / 2 - VEC_ONES * fParticleSize;
+ }
 
-void Solver::Start() {
+void Solver::SetParticleSize(const float size) {
+    fParticleSize = size;
+    fHalfBoundsSize = fBoundsSize / 2 - VEC_ONES * fParticleSize;
+}
+
+void Solver::Start(bool doRandomPos) {
     // TODO: Add an option to this to instead place the particles randomly
     // Create the particles and place them in a grid formation
-    int particlesPerRow = (int)sqrt(fNParticles);
-    int particlesPerCol = (fNParticles - 1) / particlesPerRow + 1;
-    float spacing = fParticleSize * 2 + fParticleSpacing;
+    if(doRandomPos) {
+        std::random_device rd;  // Seed
+        std::mt19937 gen(rd()); // Mersenne Twister generator
 
-    for(int i = 0; i < fNParticles; ++i) {
-        float x = (i % particlesPerRow - particlesPerRow / 2.0 + 0.5) * spacing;
-        float y = (i / particlesPerRow - particlesPerCol / 2.0 + 0.5) * spacing;
-        fParticles.push_back(Particle(
-            Vector2(x, y),
-            Vector2(0.0f, 0.0f)
-        ));
+        // Define a uniform real distribution in the range [-1, 1]
+        std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
+
+        for(int i = 0; i < fNParticles; ++i) {
+            float x = dist(gen); // generate a random float
+            float y = dist(gen); // generate another random float
+            fParticles.push_back(Particle(
+                Vector2(x, y),
+                Vector2(0.0, 0.0)
+            ));
+        }
+
+    // Generate a random float
+    float randomFloat = dist(gen);
+    } else {
+        int particlesPerRow = (int)sqrt(fNParticles);
+        int particlesPerCol = (fNParticles - 1) / particlesPerRow + 1;
+        float spacing = fParticleSize * 2 + fParticleSpacing;
+
+        for(int i = 0; i < fNParticles; ++i) {
+            float x = (i % particlesPerRow - particlesPerRow / 2.0 + 0.5) * spacing;
+            float y = (i / particlesPerRow - particlesPerCol / 2.0 + 0.5) * spacing;
+            fParticles.push_back(Particle(
+                Vector2(x, y),
+                Vector2(0.0, 0.0)
+            ));
+        }
     }
 }
 
@@ -42,18 +71,14 @@ void Solver::Update() {
 
 void Solver::ResolveCollisions(int i) {
     Particle *pa = &fParticles.at(i);
-
-    Vector2 boundsSize(2., 2.); // +/- 1 in each direction
-    Vector2 halfBoundsSize = boundsSize / 2 - VEC_ONES * fParticleSize;
-
     // Out of bounds in x
-    if(fabs(pa->p.x) > halfBoundsSize.x) {
-        pa->p = halfBoundsSize.x * Sign(pa->p.x);
+    if(fabs(pa->p.x) > fHalfBoundsSize.x) {
+        pa->p = fHalfBoundsSize.x * Sign(pa->p.x);
         pa->v *= -1.0;
     }
 
-    if(fabs(pa->p.y) > halfBoundsSize.y) {
-        pa->p.y = halfBoundsSize.y * Sign(pa->p.y);
+    if(fabs(pa->p.y) > fHalfBoundsSize.y) {
+        pa->p.y = fHalfBoundsSize.y * Sign(pa->p.y);
         pa->v *= -1.0;
     }
 
