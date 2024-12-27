@@ -30,6 +30,12 @@ struct Vector2 {
         return *this; // Return the updated object
     }
 
+    Vector2& operator*=(const float scalar) {
+        x *= scalar;
+        y *= scalar;
+        return *this;
+    }
+
     // Overload subtraction of two Vector2 objects
     Vector2 operator-(const Vector2 &other) const {
         return Vector2(x - other.x, y - other.y);
@@ -38,6 +44,10 @@ struct Vector2 {
      // Overload multiplication by a scalar (Vector2 * scalar)
     Vector2 operator*(const float scalar) const {
         return Vector2(x * scalar, y * scalar);
+    }
+
+    Vector2 operator/(const float scalar) const {
+        return Vector2(x / scalar, y / scalar);
     }
 
     // Overload multiplication by a scalar (scalar * Vector2)
@@ -50,5 +60,9 @@ struct Vector2 {
         return os;
     }
 };
+
+const Vector2 VEC_DOWN(0.0, -1.0);
+const Vector2 VEC_UP(0.0, 1.0);
+const Vector2 VEC_ONES(1.0, 1.0);
 
 #endif

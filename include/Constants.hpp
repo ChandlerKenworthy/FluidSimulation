@@ -6,7 +6,7 @@ float Sign(float x) {
 }
 
 const float GRAVITY = 9.81;
-const float DELTA_TIME = 1. / 30.; // 1/30th of a second
+const float DELTA_TIME = 1. / 60.; // 1/60th of a second
 const float COLLISION_DAMPING = 0.8;
 
 #endif
