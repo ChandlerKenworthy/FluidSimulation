@@ -2,10 +2,9 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 #include "Renderer.hpp"
-#include "Constants.hpp"
 #include "Solver.hpp"
 
-#define NUM_PARTICLES 16
+#define NUM_PARTICLES 3
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -22,7 +21,7 @@ int main() {
     // Create the window object
     const float VIEW_WIDTH = 800;
     const float VIEW_HEIGHT = 600;
-    GLFWwindow* window = glfwCreateWindow(VIEW_WIDTH, VIEW_HEIGHT, "OpenGL Window", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(VIEW_WIDTH, VIEW_HEIGHT, "Fluid Simulation v1.0", nullptr, nullptr);
     if (!window) {
         std::cerr << "Failed to create GLFW window\n";
         glfwTerminate();
@@ -48,12 +47,31 @@ int main() {
     r.SetParticleRadius(s.GetParticleSize());
     r.InitGL();
 
+    double lastTime = glfwGetTime(); 
+    double currentTime; 
+    const double desiredTimestep = 1.0 / 60.0; // 60 frames per second
+    bool isPaused = false;
+    bool wasPressed = false;
+
     // Main loop
     while (!glfwWindowShouldClose(window)) {
-        r.ProcessInputs();
+        r.ProcessInputs(isPaused, wasPressed);
 
-        // TODO: step the particle forwards
-        // s.Update();
+        currentTime = glfwGetTime();
+        double deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        // Accumulate time for fixed timestep updates
+        static double accumulatedTime = 0.0;
+        accumulatedTime += deltaTime;
+
+        // Update simulation at fixed timestep
+        if(!isPaused) {
+            while (accumulatedTime >= desiredTimestep) {
+                s.Update(); // Pass the fixed timestep to s.Update()
+                accumulatedTime -= desiredTimestep;
+            }
+        }
 
         r.UpdateParticleBuffer(); // Update buffers to draw new position
         r.Render(); // Draw the scene

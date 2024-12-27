@@ -175,14 +175,23 @@ void Renderer::Render() {
 
 }
 
-void Renderer::ProcessInputs() {
+void Renderer::ProcessInputs(bool &isPaused, bool &wasPressed) {
     if(glfwGetKey(fWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(fWindow, GL_TRUE);
+    }
+    // Check for the "P" key press to toggle pause state
+    if (glfwGetKey(fWindow, GLFW_KEY_P) == GLFW_PRESS) {
+        if (!wasPressed) {
+            isPaused = !isPaused; // Toggle pause state
+            wasPressed = true;   // Mark key as pressed
+        }
+    } else {
+        wasPressed = false; // Reset key state when not pressed
     }
 }
 
 void Renderer::UpdateParticleBuffer() {
     glBindBuffer(GL_ARRAY_BUFFER, fVBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Vector2) * fParticles->size(), fParticles->data());
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Particle) * fParticles->size(), fParticles->data());
     glBindBuffer(GL_ARRAY_BUFFER, 0); // unbind the buffer
 }

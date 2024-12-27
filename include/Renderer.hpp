@@ -14,7 +14,7 @@ class Renderer {
         explicit Renderer(GLFWwindow *window, const float view_width, const float view_height, std::vector<Particle> *particles);
         void InitGL();
         void Render();
-        void ProcessInputs();
+        void ProcessInputs(bool &isPaused, bool &wasPressed);
         void UpdateParticleBuffer();
         void SetParticleRadius(const float radius) { fParticleRadius = radius; }
     private:

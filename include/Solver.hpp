@@ -9,9 +9,6 @@ class Solver {
         std::vector<Particle>* GetParticles() { return &fParticles; };
         void Start();
         void InitSPH();
-        void Integrate();
-        void ComputeDensityPressure();
-        void ComputeForces();
         void Update();
         float GetParticleSize() { return fParticleSize; }
         float GetParticleSpacing() { return fParticleSpacing; }
@@ -22,6 +19,11 @@ class Solver {
         std::vector<Particle> fParticles;
         float fParticleSize;
         float fParticleSpacing;
+
+        void ResolveCollisions(int i);
+        void Integrate();
+        void ComputeDensityPressure();
+        void ComputeForces();
 
 
 };
